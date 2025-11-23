@@ -1,6 +1,7 @@
 package server.handlers;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import server.models.Product;
@@ -49,6 +50,11 @@ public class ProductHandler implements HttpHandler {
 
             if (method.equalsIgnoreCase("DELETE")) {
                 handleDeleteProduct(exchange);
+                return;
+            }
+
+            if (method.equalsIgnoreCase("PATCH")) {
+                handlePatchProduct(exchange);
                 return;
             }
 
@@ -229,6 +235,94 @@ public class ProductHandler implements HttpHandler {
         }
 
         exchange.sendResponseHeaders(204, -1);
+        exchange.close();
+    }
+
+    private void handlePatchProduct(HttpExchange exchange) throws IOException {
+        String path = exchange.getRequestURI().getPath();
+        String[] parts = path.split("/");
+
+        if (parts.length < 3) {
+            String errorJson = "{\"error\":\"Requisição inválida\"}";
+            byte[] errorBytes = errorJson.getBytes();
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(400, errorBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(errorBytes);
+            }
+            exchange.close();
+            return;
+        }
+
+        String idStr = parts[2];
+        int id;
+
+        try {
+            id = Integer.parseInt(idStr);
+        } catch (NumberFormatException e) {
+            String errorJson = "{\"error\":\"ID inválido\"}";
+            byte[] errorBytes = errorJson.getBytes();
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(400, errorBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(errorBytes);
+            }
+            exchange.close();
+            return;
+        }
+
+        Product found = null;
+        for (Product p : products) {
+            if (p.id == id) {
+                found = p;
+                break;
+            }
+        }
+
+        if (found == null) {
+            String errorJson = "{\"error\":\"Produto não encontrado\"}";
+            byte[] errorBytes = errorJson.getBytes();
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(404, errorBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(errorBytes);
+            }
+            exchange.close();
+            return;
+        }
+
+        String requestBody = new String(exchange.getRequestBody().readAllBytes());
+
+        if (requestBody == null || requestBody.isBlank()) {
+            String errorJson = "{\"error\":\"Empty body\"}";
+            byte[] errorBytes = errorJson.getBytes();
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(400, errorBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(errorBytes);
+            }
+            exchange.close();
+            return;
+        }
+
+        JsonObject jsonBody = gson.fromJson(requestBody, JsonObject.class);
+
+        if (jsonBody.has("name") && !jsonBody.get("name").isJsonNull()) {
+            found.name = jsonBody.get("name").getAsString();
+        }
+
+        if (jsonBody.has("price") && !jsonBody.get("price").isJsonNull()) {
+            found.price = jsonBody.get("price").getAsDouble();
+        }
+
+        String json = gson.toJson(found);
+        byte[] responseBytes = json.getBytes();
+
+        exchange.getResponseHeaders().set("Content-Type", "application/json");
+        exchange.sendResponseHeaders(200, responseBytes.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(responseBytes);
+        }
         exchange.close();
     }
 
