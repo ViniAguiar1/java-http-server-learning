@@ -11,6 +11,7 @@ O objetivo é entender como um servidor web funciona por baixo, antes de migrar 
 - Servidor HTTP rodando na porta **8080**
 - Rota `GET /hello` respondendo um JSON simples
 - Rota `GET /products` retornando uma lista de produtos em memória
+- Rota `GET /products/{id}` retornando um produto específico
 - Manipulação manual de:
     - Headers
     - Status code
@@ -67,7 +68,7 @@ out/
 No diretório raiz do projeto:
 
 ```bash
-javac -d out $(find src -name "*.java")
+javac -cp libs/gson-2.10.1.jar -d out $(find src -name "*.java")
 ```
 
 Esse comando:
@@ -78,7 +79,7 @@ Esse comando:
 > Em Windows (sem `find`), você pode compilar manualmente, por exemplo:
 >
 > ```bash
-> javac -d out src/server/Main.java src/server/handlers/*.java src/server/models/*.java
+> javac -cp libs/gson-2.10.1.jar -d out src/server/Main.java src/server/handlers/*.java src/server/models/*.java
 > ```
 
 ---
@@ -88,7 +89,13 @@ Esse comando:
 Ainda no diretório raiz:
 
 ```bash
-java -cp out server.Main
+java -cp "out:libs/gson-2.10.1.jar" server.Main
+```
+
+Em Windows:
+
+```bash
+java -cp "out;libs/gson-2.10.1.jar" server.Main
 ```
 
 Se tudo estiver correto, você verá no console:
@@ -105,19 +112,11 @@ Servidor rodando na porta 8080
 
 - URL: `http://localhost:8080/hello`
 
-**Navegador:**  
-Acesse diretamente a URL.
-
 **Curl:**
 
 ```bash
 curl http://localhost:8080/hello
 ```
-
-**Postman:**
-
-- Método: `GET`
-- URL: `http://localhost:8080/hello`
 
 **Resposta esperada:**
 
@@ -130,8 +129,6 @@ curl http://localhost:8080/hello
 ### 🔹 Rota `GET /products`
 
 - URL: `http://localhost:8080/products`
-
-Essa rota retorna uma lista de produtos em memória (ArrayList), simulando um “banco de dados” simples.
 
 **Curl:**
 
@@ -151,13 +148,32 @@ curl http://localhost:8080/products
 
 ---
 
+### 🔹 Rota `GET /products/{id}`
+
+- URL: `http://localhost:8080/products/1`
+
+**Curl:**
+
+```bash
+curl http://localhost:8080/products/1
+```
+
+**Resposta esperada:**
+
+```json
+{ "id": 1, "name": "Notebook", "price": 3500.0 }
+```
+
+**Erros tratados:**
+
+- `GET /products/abc` → **400 (ID inválido)**
+- `GET /products/999` → **404 (Produto não encontrado)**
+
+---
+
 ## 🔧 Próximos passos (evolução planejada)
 
-Algumas melhorias previstas para este servidor HTTP:
-
-- [ ] Separar melhor responsabilidades (camada de serviço, repositório)
 - [ ] Adicionar suporte a `POST /products` para criar novos produtos
-- [ ] Adicionar `GET /products/{id}` para detalhar um produto
 - [ ] Adicionar `DELETE /products/{id}` para remover um produto
 - [ ] Adicionar logs mais completos para cada requisição
 - [ ] Persistir dados em arquivo (simulando banco)
@@ -178,5 +194,5 @@ Este projeto é parte prática da minha transição focada em:
 ## 📧 Contato
 
 Vinicius Aguiar — Software Engineer  
-LinkedIn: https://linkedin.com/in/viniciusaguiar  
-GitHub: https://github.com/viniciusaguiar
+LinkedIn: https://www.linkedin.com/in/viniciusaguiar-araujo/  
+GitHub: https://github.com/ViniAguiar1
