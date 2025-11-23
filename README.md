@@ -12,6 +12,7 @@ O objetivo é entender como um servidor web funciona por baixo, antes de migrar 
 - Rota `GET /hello` respondendo um JSON simples
 - Rota `GET /products` retornando uma lista de produtos em memória
 - Rota `GET /products/{id}` retornando um produto específico
+- Rota `POST /products` para criar novos produtos
 - Manipulação manual de:
     - Headers
     - Status code
@@ -171,9 +172,51 @@ curl http://localhost:8080/products/1
 
 ---
 
+### 🔹 Rota `POST /products`
+
+- URL: `http://localhost:8080/products`
+- Método: `POST`
+- Content-Type: `application/json`
+
+**Curl:**
+
+```bash
+curl -X POST http://localhost:8080/products \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Monitor 4K", "price": 1200.0}'
+```
+
+**Body da requisição (exemplo):**
+
+```json
+{
+  "name": "Monitor 4K",
+  "price": 1200.0
+}
+```
+
+**Resposta esperada (201 Created):**
+
+```json
+{
+  "id": 4,
+  "name": "Monitor 4K",
+  "price": 1200.0
+}
+```
+
+> **Nota:** O ID é gerado automaticamente pelo servidor (próximo ID disponível). Não é necessário enviar o `id` no body da requisição.
+
+**Erros tratados:**
+
+- `POST /products` com body vazio → **400 (Empty body)**
+- `POST /products` com método não permitido → **405 (Método não permitido)**
+
+---
+
 ## 🔧 Próximos passos (evolução planejada)
 
-- [ ] Adicionar suporte a `POST /products` para criar novos produtos
+- [x] Adicionar suporte a `POST /products` para criar novos produtos
 - [ ] Adicionar `DELETE /products/{id}` para remover um produto
 - [ ] Adicionar logs mais completos para cada requisição
 - [ ] Persistir dados em arquivo (simulando banco)
