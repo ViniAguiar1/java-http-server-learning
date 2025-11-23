@@ -217,7 +217,7 @@ curl -X POST http://localhost:8080/products \
 ## 🔧 Próximos passos (evolução planejada)
 
 - [x] Adicionar suporte a `POST /products` para criar novos produtos
-- [ ] Adicionar `DELETE /products/{id}` para remover um produto
+- [x] Adicionar `DELETE /products/{id}` para remover um produto
 - [ ] Adicionar logs mais completos para cada requisição
 - [ ] Persistir dados em arquivo (simulando banco)
 - [ ] Migrar a ideia para um projeto equivalente em Spring Boot

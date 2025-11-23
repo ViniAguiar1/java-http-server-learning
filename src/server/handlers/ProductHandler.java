@@ -41,8 +41,18 @@ public class ProductHandler implements HttpHandler {
             return;
         }
 
-        if (path.startsWith("/products/") && method.equalsIgnoreCase("GET")) {
-            handleListProductById(exchange);
+        if (path.startsWith("/products/")) {
+            if (method.equalsIgnoreCase("GET")) {
+                handleListProductById(exchange);
+                return;
+            }
+
+            if (method.equalsIgnoreCase("DELETE")) {
+                handleDeleteProduct(exchange);
+                return;
+            }
+
+            handleMethodNotAllowed(exchange);
             return;
         }
 
@@ -76,7 +86,6 @@ public class ProductHandler implements HttpHandler {
         if (parts.length < 3) {
             String errorJson = "{\"error\":\"Requisição inválida\"}";
             byte[] errorBytes = errorJson.getBytes();
-
             exchange.getResponseHeaders().set("Content-Type", "application/json");
             exchange.sendResponseHeaders(400, errorBytes.length);
             try (OutputStream os = exchange.getResponseBody()) {
@@ -87,14 +96,13 @@ public class ProductHandler implements HttpHandler {
         }
 
         String idStr = parts[2];
-
         int id;
+
         try {
             id = Integer.parseInt(idStr);
         } catch (NumberFormatException e) {
             String errorJson = "{\"error\":\"ID inválido\"}";
             byte[] errorBytes = errorJson.getBytes();
-
             exchange.getResponseHeaders().set("Content-Type", "application/json");
             exchange.sendResponseHeaders(400, errorBytes.length);
             try (OutputStream os = exchange.getResponseBody()) {
@@ -115,7 +123,6 @@ public class ProductHandler implements HttpHandler {
         if (found == null) {
             String errorJson = "{\"error\":\"Produto não encontrado\"}";
             byte[] errorBytes = errorJson.getBytes();
-
             exchange.getResponseHeaders().set("Content-Type", "application/json");
             exchange.sendResponseHeaders(404, errorBytes.length);
             try (OutputStream os = exchange.getResponseBody()) {
@@ -171,6 +178,57 @@ public class ProductHandler implements HttpHandler {
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(responseBytes);
         }
+        exchange.close();
+    }
+
+    private void handleDeleteProduct(HttpExchange exchange) throws IOException {
+        String path = exchange.getRequestURI().getPath();
+        String[] parts = path.split("/");
+
+        if (parts.length < 3) {
+            String errorJson = "{\"error\":\"Requisição inválida\"}";
+            byte[] errorBytes = errorJson.getBytes();
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(400, errorBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(errorBytes);
+            }
+            exchange.close();
+            return;
+        }
+
+        String idStr = parts[2];
+        int id;
+
+        try {
+            id = Integer.parseInt(idStr);
+        } catch (NumberFormatException e) {
+            String errorJson = "{\"error\":\"ID inválido\"}";
+            byte[] errorBytes = errorJson.getBytes();
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(400, errorBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(errorBytes);
+            }
+            exchange.close();
+            return;
+        }
+
+        boolean removed = products.removeIf(p -> p.id == id);
+
+        if (!removed) {
+            String errorJson = "{\"error\":\"Produto não encontrado\"}";
+            byte[] errorBytes = errorJson.getBytes();
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(404, errorBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(errorBytes);
+            }
+            exchange.close();
+            return;
+        }
+
+        exchange.sendResponseHeaders(204, -1);
         exchange.close();
     }
 
